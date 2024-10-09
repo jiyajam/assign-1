@@ -1,0 +1,153 @@
+########1
+import mysql.connector
+
+def fetch_airport_details(icao_code):
+    connection = mysql.connector.connect(
+        user="jiya",
+        password="new_password",
+        host="localhost",
+        port=3306,
+        database="airport",
+        autocommit=True,
+        charset="utf8mb4",
+        collation="utf8mb4_general_ci"
+    )
+
+
+    cursor = connection.cursor()
+
+
+    query = "SELECT name, municipality FROM airport WHERE ident = %s"
+    cursor.execute(query, (icao_code,))
+
+
+    result = cursor.fetchone()
+
+    if result:
+        name, municipality = result
+        print(f"Airport Name: {name}")
+        print(f"Location: {municipality}")
+    else:
+        print("No airport found with the given ICAO code.")
+
+
+    cursor.close()
+    connection.close()
+
+
+if __name__ == "__main__":
+    icao_code = input("Enter the ICAO code of the airport: ").strip().upper()
+    fetch_airport_details(icao_code)
+
+
+#########2
+import mysql.connector
+
+def fetch_airports_by_area_code(area_code):
+    connection = mysql.connector.connect(
+        user="jiya",
+        password="new_password",
+        host="localhost",
+        port=3306,
+        database="airport",
+        autocommit=True,
+        charset="utf8mb4",
+        collation="utf8mb4_general_ci"
+    )
+
+    cursor = connection.cursor()
+
+
+    query = """
+        SELECT type, COUNT(*) as count
+        FROM airport
+        WHERE iso_country = %s
+        GROUP BY type
+        ORDER BY count DESC;
+    """
+    cursor.execute(query, (area_code,))
+
+    results = cursor.fetchall()
+
+    if results:
+        print(f"Great choice! Here are the airports in the country with area code '{area_code}':")
+        for airport_type, count in results:
+            print(f" {count} {airport_type} airport(s) found.")
+    else:
+        print(f"Oops! It seems there are no airports for the area code '{area_code}'. Please double-check and try again.")
+
+
+    cursor.close()
+    connection.close()
+
+
+if __name__ == "__main__":
+    print("Welcome to the Airport Finder! ")
+    area_code = input("Please enter the area code (like 'FI' for Finland): ").strip().upper()
+    fetch_airports_by_area_code(area_code)
+
+#########3
+import mysql.connector
+from geopy.distance import great_circle
+
+
+def fetch_airport_coordinates(icao_code):
+    connection = mysql.connector.connect(
+        user="jiya",
+        password="new_password",
+        host="localhost",
+        port=3306,
+        database="airport",
+        autocommit=True,
+        charset="utf8mb4",
+        collation="utf8mb4_general_ci"
+    )
+
+    cursor = connection.cursor()
+    query = "SELECT latitude_deg, longitude_deg FROM airport WHERE ident = %s"
+    cursor.execute(query, (icao_code,))
+
+    result = cursor.fetchone()
+    cursor.close()
+    connection.close()
+
+    return result
+
+
+if __name__ == "__main__":
+    print("Welcome to the Airport Distance Calculator! ✈️🌍")
+
+    icao_code1 = input("Enter the ICAO code of airport 1: ")
+    icao_code2 = input("Enter the ICAO code of airport 2: ")
+
+
+    icao_code1 = icao_code1.upper()
+    icao_code2 = icao_code2.upper()
+
+    coords1 = fetch_airport_coordinates(icao_code1)
+    coords2 = fetch_airport_coordinates(icao_code2)
+
+    if coords1 and coords2:
+
+        distance = great_circle(coords1, coords2).kilometers
+        print(f"The distance between {icao_code1} and {icao_code2} is {distance:.2f} kilometers.")
+    else:
+        if not coords1:
+            print(f"Could not find coordinates '{icao_code1}'.")
+        if not coords2:
+            print(f"Could not find coordinates  '{icao_code2}'.")
+
+# import mysql.connector
+# connection = mysql.connector.connect(
+#         user="jiya",
+#         password="new_password",
+#         host="localhost",
+#         port=3306,
+#         database="airport",
+#         autocommit=True,
+#         charset="utf8mb4",
+#         collation="utf8mb4_general_ci"
+#     )
+#
+#
+#     cursor = connection.cursor()
